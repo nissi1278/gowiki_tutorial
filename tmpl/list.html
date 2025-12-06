@@ -1,0 +1,8 @@
+<ul>
+    {{ range .Pages}}
+        <li>
+            <h2>{{.Title}}</h1>
+            <p>[<a href="/view/{{.Title}}">view</a>]</p>
+        </li>
+    {{end}}
+</ul>
