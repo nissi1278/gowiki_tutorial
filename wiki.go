@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 	"regexp"
 )
 
@@ -57,10 +58,19 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
-var templates = template.Must(template.ParseFiles(tmplPath+"list.html", tmplPath+"edit.html", tmplPath+"view.html"))
+func getTmplFile(getPath string) string {
+	return filepath.Join(TmplPath, getPath)
+}
+
+func getDataFile(getPath string) string {
+	return filepath.Join(DataPath, getPath)
+}
+
+var templates = template.Must(template.ParseFiles(getTmplFile("list.html"), getTmplFile("edit.html"), getTmplFile("view.html")))
 var validPath = regexp.MustCompile("^/(edit|view|save)/([a-zA-Z0-9]+)$")
-var tmplPath = "tmpl/"
-var dataPath = "data/"
+
+const TmplPath = "tmpl/"
+const DataPath = "data/"
 
 func main() {
 	http.HandleFunc("/", listHandler)

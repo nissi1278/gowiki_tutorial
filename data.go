@@ -12,14 +12,14 @@ type Page struct {
 }
 
 func (p *Page) Save() error {
-	filename := p.Title + ".txt"
+	filename := getDataFile(p.Title + ".txt")
 	return os.WriteFile(filename, p.Body, 0600)
 }
 
 func getDataTitleInDir() ([]string, error) {
-	entries, err := os.ReadDir(dataPath)
+	entries, err := os.ReadDir(DataPath)
 	if err != nil {
-		return nil, fmt.Errorf("ディレクトリ %s が見つかりませんでした。", dataPath)
+		return nil, fmt.Errorf("ディレクトリ %s が見つかりませんでした。", DataPath)
 	}
 
 	var titles []string
@@ -34,7 +34,7 @@ func getDataTitleInDir() ([]string, error) {
 	}
 
 	if len(titles) == 0 {
-		return nil, fmt.Errorf("ディレクトリ %s にデータファイルが見つかりませんでした。", dataPath)
+		return nil, fmt.Errorf("ディレクトリ %s にデータファイルが見つかりませんでした。", DataPath)
 	}
 
 	return titles, nil
@@ -57,7 +57,7 @@ func loadAllPages() ([]*Page, error) {
 }
 
 func loadPage(title string) (*Page, error) {
-	filename := dataPath + title + ".txt"
+	filename := getDataFile(title + ".txt")
 	body, err := os.ReadFile(filename)
 
 	if err != nil {
