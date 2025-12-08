@@ -1,80 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
-	"strings"
 )
-
-type Page struct {
-	Title string
-	Body  []byte
-}
-
-type TemplateData struct {
-	Page  *Page
-	Pages []*Page
-}
-
-func (p *Page) Save() error {
-	filename := p.Title + ".txt"
-	return os.WriteFile(filename, p.Body, 0600)
-}
-
-func getDataTitleInDir() ([]string, error) {
-	entries, err := os.ReadDir(dataPath)
-	if err != nil {
-		return nil, fmt.Errorf("ディレクトリ %s が見つかりませんでした。", dataPath)
-	}
-
-	var titles []string
-	for _, entry := range entries {
-		// ディレクトリはdata/に格納していないが、チェック。
-		if entry.IsDir() {
-			continue
-		}
-		title := strings.TrimSuffix(entry.Name(), ".txt")
-
-		titles = append(titles, title)
-	}
-
-	if len(titles) == 0 {
-		return nil, fmt.Errorf("ディレクトリ %s にデータファイルが見つかりませんでした。", dataPath)
-	}
-
-	return titles, nil
-}
-
-func loadAllPages() ([]*Page, error) {
-	titles, err := getDataTitleInDir()
-	if err != nil {
-		return nil, err
-	}
-	var pages []*Page
-	for _, title := range titles {
-		page, err := loadPage(title)
-		if err != nil {
-			return nil, err
-		}
-		pages = append(pages, page)
-	}
-	return pages, nil
-}
-
-func loadPage(title string) (*Page, error) {
-	filename := dataPath + title + ".txt"
-	body, err := os.ReadFile(filename)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &Page{Title: title, Body: body}, err
-}
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -124,24 +55,6 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	}
 
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
-}
-func renderPage(w http.ResponseWriter, p *Page, tmpl string) {
-	data := &TemplateData{Page: p}
-	renderTemplate(w, tmpl, data)
-}
-
-func renderPages(w http.ResponseWriter, p []*Page, tmpl string) {
-	data := &TemplateData{Pages: p}
-	renderTemplate(w, tmpl, data)
-}
-
-func renderTemplate(w http.ResponseWriter, tmpl string, data *TemplateData) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err := templates.ExecuteTemplate(w, tmpl+".html", data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 }
 
 var templates = template.Must(template.ParseFiles(tmplPath+"list.html", tmplPath+"edit.html", tmplPath+"view.html"))
